@@ -17,3 +17,7 @@ class MODE_MA(Enum) :
     EMA = 1
     WMA = 2
     RMA = 3
+
+class DATAFEEDER(Enum) :
+    WEBSOCKET = 0
+    REDIS     = 1

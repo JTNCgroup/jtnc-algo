@@ -16,7 +16,7 @@ import websockets
 import sys
 sys.path.append('expadvlib')
 import bars
-from const import TIMEFRAME
+from const import TIMEFRAME, DATAFEEDER
 from indicators import *
 
 WS_URL = "ws://34.61.153.252:8111/ws"
@@ -26,14 +26,15 @@ REDIS_CHANNEL = "stocks"
 redis_pool    = aioredis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 redis_client  = aioredis.Redis(connection_pool=redis_pool)
 
+
 class BaseEA :
     MODE = Enum("MODE", [("LIVE", 0), ("TEST", 1)])
-    DATA_FEEDER = Enum("DATA_FEEDER", [("WEBSOCKET", 0), ("REDIS", 1)])
+    # DATA_FEEDER = Enum("DATA_FEEDER", [("WEBSOCKET", 0), ("REDIS", 1)])
     def __init__(self):
         self.__mode = self.MODE.LIVE
-        self.__datafeeder = self.DATA_FEEDER.REDIS
+        self.__datafeeder = DATAFEEDER.REDIS
     
-    async def AsyncRun(self, datafeeder='websocket') :
+    async def AsyncRun(self, datafeeder=DATAFEEDER.REDIS) :
         self.__mode = self.MODE.LIVE
         self.__datafeeder = datafeeder
         # match datafeeder :
@@ -57,7 +58,7 @@ class BaseEA :
     
     async def _LoopLive(self) :
         match self.__datafeeder :
-            case self.DATA_FEEDER.WEBSOCKET :
+            case DATAFEEDER.WEBSOCKET :
                 while True:
                     try:
                         async with websockets.connect(WS_URL, ping_interval=20, ping_timeout=10) as websocket:
@@ -76,7 +77,7 @@ class BaseEA :
                     except Exception as e:
                         print(f"Unexpected error: {e}. Retrying in 5 seconds...")
                         await asyncio.sleep(5)
-            case self.DATA_FEEDER.REDIS :
+            case DATAFEEDER.REDIS :
                 pubsub = redis_client.pubsub()
                 await pubsub.subscribe(REDIS_CHANNEL)
 
@@ -284,7 +285,7 @@ class TestEA(BaseEA) :
                   'apiKey'   : API_KEY}
         
         match self.__datafeeder :
-            case self.DATA_FEEDER.WEBSOCKET :
+            case DATAFEEDER.WEBSOCKET :
                 params = {'url' : url,
                         'params' : params}
                 
@@ -295,7 +296,7 @@ class TestEA(BaseEA) :
                     if 'results' in s['received_data'] :
                         return s['received_data']['results']
             
-            case self.DATA_FEEDER.REDIS :
+            case DATAFEEDER.REDIS :
                 r = requests.get(url=url, params=params)
                 if r.ok :
                     s = r.json()
@@ -336,5 +337,5 @@ class TestEA(BaseEA) :
 
 if __name__ == '__main__' :
     EA = TestEA('SPY')
-    asyncio.run(EA.AsyncRun(EA.DATA_FEEDER.REDIS))
+    asyncio.run(EA.AsyncRun(DATAFEEDER.REDIS))
     
