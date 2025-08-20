@@ -217,7 +217,7 @@ class TestEA(BaseEA) :
     def entry_rule(self) :
         # TODO : Check if strategy pausing
         
-        if self.bar_m1.Nrates < max(self.period_stoch_k, self.period_atr) :
+        if self.bar_m1.Nrates() < max(self.period_stoch_k, self.period_atr) :
             return
 
         rsi_up = self.stoch[0][-1] > self.stoch[1][-1]
