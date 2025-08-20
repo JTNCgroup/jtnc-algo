@@ -266,7 +266,7 @@ class TestEA(BaseEA) :
                               }
         
         
-    def DownloadData(self) :
+    def DownloadData(self, data_source='polygon') :
         API_KEY = "VI6KWvmzTp5sDsDUfwZbJapZHoWOSFbb"
         
         multiplier = 1
@@ -280,14 +280,25 @@ class TestEA(BaseEA) :
                   'sort'     : 'asc',
                   'limit'    : 50000,
                   'apiKey'   : API_KEY}
-        params = {'url' : url,
-                  'params' : params}
         
-        r = requests.post('http://34.61.153.252:8111/api', json=params)
-        s = r.json()
-        
-        if 'results' in s['received_data'] :
-            return s['received_data']['results']
+        match data_source :
+            case 'jtnc' :
+                params = {'url' : url,
+                        'params' : params}
+                
+                r = requests.post('http://34.61.153.252:8111/api', json=params)
+
+                if r.ok :
+                    s = r.json()
+                    if 'results' in s['received_data'] :
+                        return s['received_data']['results']
+            
+            case 'polygon' :
+                r = requests.get(url=url, params=params)
+                if r.ok :
+                    s = r.json()
+                    if 'results' in s :
+                        return s['results']
         
     @staticmethod
     def _crossover(a, b) :
