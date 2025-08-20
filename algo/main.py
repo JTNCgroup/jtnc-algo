@@ -8,6 +8,7 @@ import nest_asyncio
 from EA_01 import *
 
 nest_asyncio.apply()
+
 app = FastAPI()
 
 class Levels(BaseModel) :
@@ -43,6 +44,6 @@ async def new_levels() :
 @app.on_event("startup")
 def startup_event() :
    global EA
-   EA = TestEA()
+   EA = TestEA("SPY")
    # loop = asyncio.get_event_loop()
    # loop.create_task(EA.AsyncRun())
