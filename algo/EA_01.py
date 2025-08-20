@@ -321,7 +321,7 @@ class TestEA(BaseEA) :
         self.levels = []
 
 
-# if __name__ == '__main__' :
-#     EA = TestEA('SPY')
+if __name__ == '__main__' :
+    EA = TestEA('SPY')
 #     asyncio.run(EA.AsyncRun())
     

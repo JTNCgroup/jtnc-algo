@@ -1,8 +1,10 @@
 rel
 redis
+numpy
 requests
 aioredis
 pydantic
 websockets
+nest_asyncio
 uvicorn[standard]
 fastapi[standard]
