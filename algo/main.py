@@ -45,5 +45,5 @@ async def new_levels() :
 def startup_event() :
    global EA
    EA = TestEA("SPY")
-   # loop = asyncio.get_event_loop()
-   # loop.create_task(EA.AsyncRun())
+   loop = asyncio.get_event_loop()
+   loop.create_task(EA.AsyncRun())
