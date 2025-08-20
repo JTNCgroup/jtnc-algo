@@ -32,16 +32,16 @@ class BaseEA :
     # DATA_FEEDER = Enum("DATA_FEEDER", [("WEBSOCKET", 0), ("REDIS", 1)])
     def __init__(self):
         self.__mode = self.MODE.LIVE
-        self.__datafeeder = DATAFEEDER.REDIS
+        self.datafeeder = DATAFEEDER.REDIS
     
     async def AsyncRun(self, datafeeder=DATAFEEDER.REDIS) :
         self.__mode = self.MODE.LIVE
-        self.__datafeeder = datafeeder
+        self.datafeeder = datafeeder
         # match datafeeder :
         #     case 'websocket':
-        #         self.__datafeeder = self.DATA_FEEDER.WEBSOCKET
+        #         self.datafeeder = self.DATA_FEEDER.WEBSOCKET
         #     case 'redis' :
-        #         self.__datafeeder = self.DATA_FEEDER.REDIS
+        #         self.datafeeder = self.DATA_FEEDER.REDIS
                 
         await self.OnStart()
         await self._LoopLive()
@@ -57,7 +57,7 @@ class BaseEA :
         pass
     
     async def _LoopLive(self) :
-        match self.__datafeeder :
+        match self.datafeeder :
             case DATAFEEDER.WEBSOCKET :
                 while True:
                     try:
@@ -284,7 +284,7 @@ class TestEA(BaseEA) :
                   'limit'    : 50000,
                   'apiKey'   : API_KEY}
         
-        match self.__datafeeder :
+        match self.datafeeder :
             case DATAFEEDER.WEBSOCKET :
                 params = {'url' : url,
                         'params' : params}
