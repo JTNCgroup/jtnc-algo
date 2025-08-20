@@ -323,5 +323,5 @@ class TestEA(BaseEA) :
 
 if __name__ == '__main__' :
     EA = TestEA('SPY')
-#     asyncio.run(EA.AsyncRun())
+    asyncio.run(EA.AsyncRun())
     
