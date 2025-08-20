@@ -16,7 +16,7 @@ import websockets
 import sys
 sys.path.append('expadvlib')
 import bars
-from const import TIMEFRAME, DATAFEEDER
+from const import TIMEFRAME, DATAFEEDER, TIMEZONE_NY
 from indicators import *
 
 WS_URL = "ws://34.61.153.252:8111/ws"
@@ -147,12 +147,14 @@ class TestEA(BaseEA) :
         
         await self._UpdateInd()
 
-        self.display_data()
+        #self.display_data()
         #exit()
         
     def display_data(self) :
+        print(f'time           : {datetime.datetime.fromtimestamp(self.bar_m1.Time(-1), TIMEZONE_NY)}')
         print(f'bar            : {self.bar_m1.Open(-1)} {self.bar_m1.High(-1)} {self.bar_m1.Low(-1)} {self.bar_m1.Close(-1)}')
         print(f'Number of bars : {self.bar_m1.Nrates()}')
+        print()
         
     async def _UpdateInd(self) :
         self.rsi.OnCalculate(self.bar_m1.Close())
@@ -168,13 +170,14 @@ class TestEA(BaseEA) :
                 self.bar_m1.OnBar(m)
                 self.bar_m5.OnBar(m)
                 
-                self.display_data()
                 await self._UpdateInd()
                 self.__is_updated = True
     
     async def OnBar(self) :
         if (not self.__is_updated) or (self.bar_m1.Nrates()<=0) or (self.bar_m5.Nrates()<=0) :
             return
+        
+        self.display_data()
         
         # Exit Rule
         self.exit_rule()
