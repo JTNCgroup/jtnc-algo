@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    networks:
+      my-network:
+        ipv4_address: 172.20.0.10
+
+  datafeeder:
+    build: ./datafeeder
+    container_name: datafeeder
+    restart: always
+    networks:
+      - my-network
+    ports:
+      - "8001:8111"
+    stdin_open: true  # -i (interactive)
+    tty: true         # -t (pseudo-tty)
+
+  algo:
+    build: ./algo
+    container_name: algo
+    restart: always
+    networks:
+      - my-network
+    ports:
+      - "8002:8111"
+    stdin_open: true
+    tty: true
+
+networks:
+  my-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1

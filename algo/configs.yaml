@@ -1,0 +1,14 @@
+# app :
+#    secret_key :
+#    algorithms :
+#      - 'HS256'
+
+polygon :
+  url : 'ws://34.61.153.252:8111'
+  stock_apikey : "VI6KWvmzTp5sDsDUfwZbJapZHoWOSFbb"
+
+redis :
+  host : 'localhost'
+  port : 6379
+  stock_channel : 'stocks'
+  option_channel : 'options'
