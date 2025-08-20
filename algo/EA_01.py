@@ -238,10 +238,10 @@ class TestEA(BaseEA) :
         rsi_dn = self.stoch[0][-1] < self.stoch[1][-1]
         
         for row in self.levels :
-            side  = row['side']
-            type_ = row['type']
-            level = row['level']
-            target = row['tp']
+            side   = row['side']
+            type_  = row['type']
+            level  = row['level']
+            target = row['target']
             
             buf = [(level + self.atr[i], level - self.atr[i]) for i in (-1, -2, -3)]
             near_recent = any([self._in_region(*x) for x in buf])
