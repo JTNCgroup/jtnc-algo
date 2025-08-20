@@ -83,12 +83,17 @@ class BaseEA :
 
                 async for message in pubsub.listen():
                     if message["type"] == "message" :
-                        try :
-                            self.message = json.loads(message["data"])
-                            await self.OnUpdate()
-                            await self.OnBar()
-                        except Exception as e :
-                            print(f"Error on Redis Mode : {e}")
+
+                        self.message = json.loads(message["data"])
+                        await self.OnUpdate()
+                        await self.OnBar()
+                        
+                        # try :
+                        #     self.message = json.loads(message["data"])
+                        #     await self.OnUpdate()
+                        #     await self.OnBar()
+                        # except Exception as e :
+                        #     print(f"Error on Redis Mode : {e}")
     
     def _LoopTest(self) :
         pass
@@ -170,7 +175,6 @@ class TestEA(BaseEA) :
         
         # Entry Rule
         self.entry_rule()
-        
         
         self.__is_updated = False
     
