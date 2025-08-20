@@ -16,7 +16,7 @@ services:
     networks:
       - my-network
     ports:
-      - "8001:8111"
+      - "8011:8111"
     stdin_open: true  # -i (interactive)
     tty: true         # -t (pseudo-tty)
 
@@ -27,7 +27,7 @@ services:
     networks:
       - my-network
     ports:
-      - "8002:8111"
+      - "8012:8111"
     stdin_open: true
     tty: true
 

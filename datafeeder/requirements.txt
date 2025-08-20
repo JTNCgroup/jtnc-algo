@@ -1,5 +1,7 @@
+rel
 redis
+aioredis
 pydantic
+websockets
 uvicorn[standard]
 fastapi[standard]
-aioredis
