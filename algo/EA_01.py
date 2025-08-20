@@ -183,7 +183,7 @@ class TestEA(BaseEA) :
             return
         
         self.display_data()
-        
+
         # Exit Rule
         self.exit_rule()
         
@@ -335,7 +335,7 @@ class TestEA(BaseEA) :
         return (self.bar_m1.Low[-1] < top) and (self.bar_m1.High[-1] > bot)
     
     def add_level(self, levels) :
-        ids = [x['level'] for x in levels]
+        ids = [x['level'] for x in self.levels]
         for level in levels :
             if (level['symbol'] != self.ticker) or (level['id'] in ids)  :
                 continue
