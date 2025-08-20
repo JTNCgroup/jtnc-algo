@@ -2,21 +2,6 @@ import numpy as np
 from enum import Enum
 from const import TIMEFRAME, MODE_MA
 
-# class TIMEFRAME(Enum) :
-#     M1  = 1
-#     M2  = 2
-#     M5  = 5
-#     M10 = 10
-#     M15 = 15
-#     M30 = 30
-#     H1  = 60
-
-# class MODE_MA(Enum) :
-#     SMA = 0
-#     EMA = 1
-#     WMA = 2
-#     RMA = 3
-
 class BaseIndicator :
     def __init__(self) :
         self._values = np.array([], dtype=float)
@@ -285,19 +270,28 @@ class Stochastic(BaseIndicator) :
                 self._values  = np.hstack([self._values, np.full((2, len(close)-len(self)), np.nan)])
                 #print(len(self._stoch), self._channel.shape, self._values.shape)
         
+        eps = np.finfo(float).eps
         for i in range(start, len(high)) :
             self._CalculatePriceChannel(i, high, low)
-            self._stoch[i]     = (close[i] - self._channel[1, i])/(self._channel[0, i] - self._channel[1, i])
+            denom = (self._channel[0, i] - self._channel[1, i])
+            
+            if denom > eps :
+                self._stoch[i] = (close[i] - self._channel[1, i])/denom
+            else :
+                self._stoch[i] = 0.5
+            
             self._values[0, i] = self._CalculateSMA(i, self._stoch, self._smoothing)
             self._values[1, i] = self._CalculateSMA(i, self._values[0], self._period_d)
 
     def _CalculatePriceChannel(self, i, high, low) :
         if i<self._period_k :
             return
-        self._channel[0, i] = np.max(high[i-self._period_k+1:i+1])
-        self._channel[1, i] = np.min(low[i-self._period_k+1:i+1])
+        self._channel[0, i] = np.nanmax(high[i-self._period_k+1:i+1])
+        self._channel[1, i] = np.nanmin(low[i-self._period_k+1:i+1])
     
     def _CalculateSMA(self, i, price, period) :
+        if all(np.isnan(price[i-period+1:i+1])) :
+            return np.nan
         return np.mean(price[i-period+1:i+1])
 
 class ATR(BaseIndicator) :

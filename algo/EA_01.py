@@ -42,7 +42,7 @@ class BaseEA :
         #         self.datafeeder = self.DATA_FEEDER.WEBSOCKET
         #     case 'redis' :
         #         self.datafeeder = self.DATA_FEEDER.REDIS
-                
+        
         await self.OnStart()
         await self._LoopLive()
             
@@ -155,7 +155,6 @@ class TestEA(BaseEA) :
     async def OnUpdate(self) :
         for m in self.message :
             if m['sym'] == self.ticker :
-                await self._UpdateInd(m)
                 self.bar_m1.OnBar(m)
                 self.bar_m5.OnBar(m)
                 
