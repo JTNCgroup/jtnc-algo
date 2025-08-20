@@ -36,6 +36,8 @@ async def new_levels(levels: List[Levels]) :
          'level' : level.level,
          'target': level.target,
          'type'  : level.type} for level in levels]
+   
+   print(levels)
    print(x)
    EA.add_level(x)
    return {'message' : 'levels are added',
