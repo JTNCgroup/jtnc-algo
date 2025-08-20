@@ -16,7 +16,7 @@ API_KEY  = "VI6KWvmzTp5sDsDUfwZbJapZHoWOSFbb"
 app = FastAPI()
 connected_clients = set()
 
-REDIS_HOST    = "localhost"
+REDIS_HOST    = "redis" #"localhost"
 REDIS_PORT    = 6379
 REDIS_CHANNEL = "stocks"
 redis_pool    = aioredis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)

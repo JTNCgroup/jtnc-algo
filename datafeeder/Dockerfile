@@ -4,10 +4,11 @@ WORKDIR /app
 
 # install python modules
 COPY requirements.txt .
+RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # copy all files to the working dir
-COPY . .
+# COPY . .
 
 # expose port 8111 for accessing FastAPI
 EXPOSE 8111

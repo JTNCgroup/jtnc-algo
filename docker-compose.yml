@@ -13,6 +13,8 @@ services:
     build: ./datafeeder
     container_name: datafeeder
     restart: always
+    volumes:
+      - ./datafeeder:/app
     networks:
       - my-network
     ports:
@@ -24,6 +26,8 @@ services:
     build: ./algo
     container_name: algo
     restart: always
+    volumes:
+      - ./algo:/app
     networks:
       - my-network
     ports:

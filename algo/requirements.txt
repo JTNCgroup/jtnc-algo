@@ -1,5 +1,6 @@
 rel
 redis
+requests
 aioredis
 pydantic
 websockets
