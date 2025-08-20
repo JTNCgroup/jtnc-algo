@@ -196,7 +196,7 @@ class TestEA(BaseEA) :
             
             if self.bar_m1.Close(-1) < self.order['sl'] :
                 # TODO : Exit
-                pass
+                self.order = None
         
         elif (self.order['side'] == 'sell') :
             if (self.order['entry']-self.bar_m1.Close()) > 0.5 :
@@ -212,13 +212,16 @@ class TestEA(BaseEA) :
             
             if self.bar_m1.Close(-1) > self.order['sl'] :
                 # TODO : Exit
-                pass
+                self.order = None
     
     def entry_rule(self) :
         # TODO : Check if strategy pausing
         
-        rsi_up = self.rsi[0][-1] > self.rsi[1][-1]
-        rsi_dn = self.rsi[0][-1] < self.rsi[1][-1]
+        if self.bar_m1.Nrates < max(self.period_stoch_k, self.period_atr) :
+            return
+
+        rsi_up = self.stoch[0][-1] > self.stoch[1][-1]
+        rsi_dn = self.stoch[0][-1] < self.stoch[1][-1]
         
         for row in self.levels :
             side  = row['side']
