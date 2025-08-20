@@ -10,8 +10,8 @@ from enum import Enum
 import asyncio
 import websockets
 
-import nest_asyncio
-nest_asyncio.apply()
+#import nest_asyncio
+#nest_asyncio.apply()
 
 import sys
 sys.path.append('expadvlib')
