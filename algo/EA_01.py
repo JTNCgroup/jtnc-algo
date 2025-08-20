@@ -167,18 +167,23 @@ class TestEA(BaseEA) :
     async def OnUpdate(self) :
         for m in self.message :
             if m['sym'] == self.ticker :
+                previous_rates = self.bar_m1.Nrates()
                 self.bar_m1.OnBar(m)
                 self.bar_m5.OnBar(m)
                 
                 await self._UpdateInd()
-                self.__is_updated = True
+                
+                if self.bar_m1.Nrates() > previous_rates :
+                    self.__is_updated = True
+                else :
+                    self.__is_updated = False
     
     async def OnBar(self) :
         if (not self.__is_updated) or (self.bar_m1.Nrates()<=0) or (self.bar_m5.Nrates()<=0) :
             return
         
         self.display_data()
-        
+
         # Exit Rule
         self.exit_rule()
         
