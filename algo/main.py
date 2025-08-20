@@ -21,7 +21,7 @@ class Levels(BaseModel) :
 
 @app.get("/")
 async def root() :
-   return {"message" : "Hello World!"}
+   return {"message" : "Hello Algo!"}
 
 @app.post("/qfaa_levels")
 async def new_levels(levels: List[Levels]) :   
@@ -32,16 +32,17 @@ async def new_levels(levels: List[Levels]) :
          'level' : level.level,
          'target': level.target,
          'type'  : level.type} for level in levels]
-   EA.add_level(x)
-   return EA.get_level()
+   print(x)
+#    EA.add_level(x)
+#    return EA.get_level()
 
-@app.get("/qfaa_levels")
-async def new_levels() :
-   return EA.get_level()
+# @app.get("/qfaa_levels")
+# async def new_levels() :
+#    return EA.get_level()
 
-@app.on_event("startup")
-def startup_event() :
-   global EA
-   EA = TestEA()
-   loop = asyncio.get_event_loop()
-   loop.create_task(EA.AsyncRun())
+# @app.on_event("startup")
+# def startup_event() :
+#    global EA
+#    EA = TestEA()
+   # loop = asyncio.get_event_loop()
+   # loop.create_task(EA.AsyncRun())
