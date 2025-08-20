@@ -31,14 +31,16 @@ class BaseEA :
     DATA_FEEDER = Enum("DATA_FEEDER", [("WEBSOCKET", 0), ("REDIS", 1)])
     def __init__(self):
         self.__mode = self.MODE.LIVE
+        self.__datafeeder = self.DATA_FEEDER.REDIS
     
     async def AsyncRun(self, datafeeder='websocket') :
         self.__mode = self.MODE.LIVE
-        match datafeeder :
-            case 'websocket':
-                self.__datafeeder = self.DATA_FEEDER.WEBSOCKET
-            case 'redis' :
-                self.__datafeeder = self.DATA_FEEDER.REDIS
+        self.__datafeeder = datafeeder
+        # match datafeeder :
+        #     case 'websocket':
+        #         self.__datafeeder = self.DATA_FEEDER.WEBSOCKET
+        #     case 'redis' :
+        #         self.__datafeeder = self.DATA_FEEDER.REDIS
                 
         await self.OnStart()
         await self._LoopLive()
