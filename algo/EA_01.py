@@ -20,7 +20,7 @@ from const import TIMEFRAME, DATAFEEDER
 from indicators import *
 
 WS_URL = "ws://34.61.153.252:8111/ws"
-REDIS_HOST    = "localhost"
+REDIS_HOST    = "redis" #"localhost"
 REDIS_PORT    = 6379
 REDIS_CHANNEL = "stocks"
 redis_pool    = aioredis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
