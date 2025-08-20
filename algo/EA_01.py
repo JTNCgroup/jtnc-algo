@@ -332,7 +332,7 @@ class TestEA(BaseEA) :
         return (a[-2]>b[-2]) and (a[-1]<b[-1])
     
     def _in_region(self, top, bot) :
-        return (self.bar_m1.Low[-1] < top) and (self.bar_m1.High[-1] > bot)
+        return (self.bar_m1.Low(-1) < top) and (self.bar_m1.High(-1) > bot)
     
     def add_level(self, levels) :
         ids = [x['level'] for x in self.levels]
