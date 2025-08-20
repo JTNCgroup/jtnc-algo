@@ -20,6 +20,9 @@ class Levels(BaseModel) :
    target : float
    type   : Literal["breakout", "reversal"]
 
+class LevelID(BaseModel) :
+   id : int
+
 @app.get("/")
 async def root() :
    return {"message" : "Hello Algo!"}
@@ -35,11 +38,21 @@ async def new_levels(levels: List[Levels]) :
          'type'  : level.type} for level in levels]
    print(x)
    EA.add_level(x)
-   return EA.get_level()
+   return {'message' : 'levels are added',
+           'levels' : EA.get_level()}
 
 @app.get("/qfaa_levels")
 async def new_levels() :
    return EA.get_level()
+
+@app.delete("/qfaa_levels")
+async def delete_level(level_id : LevelID) :
+   if level_id == -1 :
+      EA.clear_level()
+      return {'message' : 'all levels are removed.'}
+   EA.delete_level(level_id)
+   return {'message' : 'level with {level_id} is removed.'}
+
 
 @app.on_event("startup")
 def startup_event() :

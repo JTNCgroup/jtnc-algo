@@ -183,7 +183,7 @@ class TestEA(BaseEA) :
             return
         
         self.display_data()
-
+        
         # Exit Rule
         self.exit_rule()
         
