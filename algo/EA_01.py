@@ -145,10 +145,15 @@ class TestEA(BaseEA) :
             self.bar_m1.OnBar(bar)
             self.bar_m5.OnBar(bar)
         
-        await self._UpdateInd()        
+        await self._UpdateInd()
+
+        self.display_data()
         #exit()
         
-
+    def display_data(self) :
+        print(f'bar            : {self.bar_m1.Open(-1)} {self.bar_m1.High(-1)} {self.bar_m1.Low(-1)} {self.bar_m1.Close(-1)}')
+        print(f'Number of bars : {self.bar_m1.Nrates()}')
+        
     async def _UpdateInd(self) :
         self.rsi.OnCalculate(self.bar_m1.Close())
         self.stoch.OnCalculate(self.rsi[:], self.rsi[:], self.rsi[:])
@@ -163,6 +168,7 @@ class TestEA(BaseEA) :
                 self.bar_m1.OnBar(m)
                 self.bar_m5.OnBar(m)
                 
+                self.display_data()
                 await self._UpdateInd()
                 self.__is_updated = True
     
