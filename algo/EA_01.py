@@ -266,7 +266,7 @@ class TestEA(BaseEA) :
                               }
         
         
-    def DownloadData(self, data_source='polygon') :
+    def DownloadData(self) :
         API_KEY = "VI6KWvmzTp5sDsDUfwZbJapZHoWOSFbb"
         
         multiplier = 1
@@ -281,8 +281,8 @@ class TestEA(BaseEA) :
                   'limit'    : 50000,
                   'apiKey'   : API_KEY}
         
-        match data_source :
-            case 'jtnc' :
+        match self.__datafeeder :
+            case self.DATA_FEEDER.WEBSOCKET :
                 params = {'url' : url,
                         'params' : params}
                 
@@ -293,7 +293,7 @@ class TestEA(BaseEA) :
                     if 'results' in s['received_data'] :
                         return s['received_data']['results']
             
-            case 'polygon' :
+            case self.DATA_FEEDER.REDIS :
                 r = requests.get(url=url, params=params)
                 if r.ok :
                     s = r.json()
@@ -334,5 +334,5 @@ class TestEA(BaseEA) :
 
 if __name__ == '__main__' :
     EA = TestEA('SPY')
-    asyncio.run(EA.AsyncRun())
+    asyncio.run(EA.AsyncRun(EA.DATA_FEEDER.REDIS))
     
