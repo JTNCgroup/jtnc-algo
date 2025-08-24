@@ -37,17 +37,17 @@ def get_db():
         conn.close()
 
 def init_db():
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-        cursor.execute(f"""
-        CREATE TABLE IF NOT EXISTS {USERS_TABLE} (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            token TEXT
-        )
-        """)
-        conn.commit()
-        conn.close()
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute(f"""
+    CREATE TABLE IF NOT EXISTS {USERS_TABLE} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        token TEXT
+    )
+    """)
+    conn.commit()
+    conn.close()
 
 init_db()
 
