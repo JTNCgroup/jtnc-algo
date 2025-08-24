@@ -6,5 +6,6 @@ aioredis
 pydantic
 websockets
 nest_asyncio
+python-jose
 uvicorn[standard]
 fastapi[standard]

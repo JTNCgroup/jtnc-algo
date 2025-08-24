@@ -4,5 +4,6 @@ requests
 aioredis
 pydantic
 websockets
+python-jose
 uvicorn[standard]
 fastapi[standard]

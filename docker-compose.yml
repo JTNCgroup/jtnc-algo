@@ -13,6 +13,8 @@ services:
     build: ./datafeeder
     container_name: datafeeder
     restart: always
+    env_file:
+      - ./.env
     volumes:
       - ./datafeeder:/app
     networks:
@@ -26,6 +28,8 @@ services:
     build: ./algo
     container_name: algo
     restart: always
+    env_file:
+      - ./.env
     volumes:
       - ./algo:/app
     networks:

@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Depends
 import rel
 import json
@@ -13,7 +14,9 @@ from common import auth
 
 #REST_URL = 'https://api.polygon.io/v3/reference/stocks/contracts'
 WS_URL   = 'wss://socket.polygon.io/stocks'
-API_KEY  = "VI6KWvmzTp5sDsDUfwZbJapZHoWOSFbb"
+#API_KEY  = "VI6KWvmzTp5sDsDUfwZbJapZHoWOSFbb"
+
+API_KEY  = os.getenv("POLYGON_API")
 
 app = FastAPI()
 connected_clients = set()

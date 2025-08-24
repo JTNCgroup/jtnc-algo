@@ -4,6 +4,8 @@ WORKDIR /app
 
 # install python modules
 COPY requirements.txt .
+RUN apt update && apt upgrade
+RUN apt install sqlite3
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
