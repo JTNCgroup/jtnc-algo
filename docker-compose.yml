@@ -17,7 +17,8 @@ services:
     env_file:
       - ./.env
     volumes:
-      - ./datafeeder:/app
+      #- ./datafeeder:/app
+      - ./:/app
     networks:
       - my-network
     ports:
@@ -33,7 +34,8 @@ services:
     env_file:
       - ./.env
     volumes:
-      - ./algo:/app
+      #- ./algo:/app
+      - ./:/app
     networks:
       - my-network
     ports:
