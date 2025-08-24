@@ -45,7 +45,6 @@ class BaseEA :
         
         await self.OnStart()
         await self._LoopLive()
-            
         
     async def OnStart(self) :
         pass
@@ -97,7 +96,7 @@ class BaseEA :
     
     def _LoopTest(self) :
         pass
-
+    
 class TestEA(BaseEA) :
     def __init__(self,
                  ticker,
@@ -190,6 +189,9 @@ class TestEA(BaseEA) :
         # Entry Rule
         self.entry_rule()
         
+        # Reset Daily Levels at 16:00 East-Coast Time
+        self.reset_daily_level()
+
         self.__is_updated = False
     
     def exit_rule(self) :
@@ -261,7 +263,6 @@ class TestEA(BaseEA) :
                                    
                 signal_long  = long_breakout and near_recent and rsi_up and break_
                 signal_short = short_reversal and near_recent and rsi_cross_recent and (self.bar_m1 < level)
-                
                 
             elif short_breakout or long_reversal :
                 break_ = self.bar_m1[-1] < level
@@ -354,6 +355,14 @@ class TestEA(BaseEA) :
     def clear_level(self) :
         self.levels = []
 
+    def reset_daily_level(self) :
+        time_reset = datetime.datetime.now(tz=TIMEZONE_NY).replace(hour=16, minute=0, second=0, microsecond=0)
+
+        for i in range(len(self.levels)-1, -1, -1) :
+            time_level = datetime.datetime.fromisoformat(self.levels[i]['time']).replace(tzinfo=TIMEZONE_NY)
+            if time_level < time_reset :
+                print('delete, ', time_level)
+                del self.levels[i]
 
 if __name__ == '__main__' :
     EA = TestEA('SPY')

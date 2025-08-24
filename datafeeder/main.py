@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Depends
 import rel
 import json
 import asyncio
@@ -8,6 +8,8 @@ import redis.asyncio as aioredis
 
 from pydantic import BaseModel
 from starlette.websockets import WebSocketState
+
+from common import auth
 
 #REST_URL = 'https://api.polygon.io/v3/reference/stocks/contracts'
 WS_URL   = 'wss://socket.polygon.io/stocks'
@@ -23,11 +25,21 @@ redis_pool    = aioredis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, decode
 redis_client  = aioredis.Redis(connection_pool=redis_pool)
 
 @app.get("/")
-async def root() : 
+async def root(user: auth.UserCreate, db=Depends(auth.get_db)) : 
    return {"message" : "Hello World!"}
 
+@app.post("/create_user", response_model=auth.Token)
+def create_user(user: auth.UserCreate, db=Depends(auth.get_db)) :
+    token = auth.create_user_with_jwt(db, user.username)
+    return {"access_token": token}
+
+@app.post("/rotate_token", response_model=auth.Token)
+def rotate_token(user: auth.UserCreate, db=Depends(auth.get_db)):
+    new_token = auth.rotate_jwt(db, user.username)
+    return {"access_token": new_token}
+
 @app.post("/api")
-async def restapi_price(request: Request) :
+async def restapi_price(request: Request, user=Depends(auth.verify_token)) :
     try:
         data = await request.json()
         
@@ -43,7 +55,17 @@ async def restapi_price(request: Request) :
 
 @app.websocket("/ws")
 async def websocket_price(websocket: WebSocket) :
+    token = websocket.headers.get("Authorization")
+    if token is None:
+        await websocket.close(code=1008)
+        return
+    try:
+        user = auth.verify_token(token)
+    except:
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
+
     connected_clients.add(websocket)
     print("Client connected")
 
@@ -86,7 +108,7 @@ async def redis_listener() :
             disconnected = []
             for ws in connected_clients:
                 if ws.application_state == WebSocketState.CONNECTED:
-                    try:
+                    try :
                         await ws.send_text(data)
                     except Exception as e:
                         print(f"⚠️ Error sending to client, removing: {e}")

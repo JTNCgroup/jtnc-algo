@@ -28,7 +28,7 @@ async def root() :
    return {"message" : "Hello Algo!"}
 
 @app.post("/qfaa_levels")
-async def new_levels(levels: List[Levels]) :   
+async def new_levels(levels: List[Levels]) :
    x = [{'id'    : level.id,
          'time'  : level.time,
          'symbol': level.symbol,
