@@ -12,6 +12,7 @@ services:
   datafeeder:
     build: ./datafeeder
     container_name: datafeeder
+    command: uvicorn datafeeder.main:app --host 0.0.0.0 --port 8111
     restart: always
     env_file:
       - ./.env
@@ -27,6 +28,7 @@ services:
   algo:
     build: ./algo
     container_name: algo
+    command: tail -f /dev/null
     restart: always
     env_file:
       - ./.env

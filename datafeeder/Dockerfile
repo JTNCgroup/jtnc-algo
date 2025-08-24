@@ -16,5 +16,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8111
 
 # run Uvicorn server on port 8111
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8111"]
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8111"]
 # CMD ["tail", "-f", "/dev/null"]
