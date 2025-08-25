@@ -28,7 +28,7 @@ redis_pool    = aioredis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, decode
 redis_client  = aioredis.Redis(connection_pool=redis_pool)
 
 @app.get("/")
-async def root(user: auth.UserCreate, db=Depends(auth.get_db)) : 
+async def root(user: str = Depends(auth.verify_token)) : 
    return {"message" : "Hello World!"}
 
 @app.post("/create_user", response_model=auth.Token)
