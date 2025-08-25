@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
-import secrets
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # ---------------------
 # Config
@@ -43,7 +43,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS {USERS_TABLE} (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
-        token TEXT
+        key TEXT
     )
     """)
     conn.commit()
@@ -55,35 +55,49 @@ init_db()
 # Auth / CRUD functions
 # ---------------------
 def create_user_with_jwt(db, username: str):
-    payload = {"sub": username}
-    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    key = os.urandom(4).hex()
+    hkey = generate_password_hash(key)
+    data = {"username": username, "key":key}
+    token = jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
     cursor = db.cursor()
-    cursor.execute(f"INSERT INTO {USERS_TABLE} (username, token) VALUES (?, ?)", (username, token))
+    cursor.execute(f"INSERT INTO {USERS_TABLE} (username, key) VALUES (?, ?)", (username, hkey))
     db.commit()
-    cursor.execute(f"SELECT * FROM {USERS_TABLE} WHERE username=?", (username,))
-    return cursor.fetchone()
+    return token
 
 def rotate_jwt(db, username: str):
-    payload = {"sub": username}
-    new_token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    key = os.urandom(4).hex()
+    new_hkey = generate_password_hash(key)
+    data = {"username": username, 'key':key}
+    new_token = jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
     cursor = db.cursor()
-    cursor.execute(f"UPDATE {USERS_TABLE} SET token=? WHERE username=?", (new_token, username))
+    cursor.execute(f"UPDATE {USERS_TABLE} SET key=? WHERE username=?", (new_hkey, username))
     db.commit()
     return new_token
+
+def get_token(db, username) :
+    cursor = db.cursor()
+    cursor.execute(f"SELECT * FROM {USERS_TABLE} WHERE username=?;", (username, ))
+    user = cursor.fetchone()
+    return None if user is None else user['key']
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security), db=Depends(get_db)):
     token = credentials.credentials
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
-        if not username:
+        data     = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = data.get("username")
+        key      = data.get("key")
+        hkey     = get_token(db, username)
+
+        if (username is None) or (key is None):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+        if (hkey is None) :
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or token invalid")
+    
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     
-    cursor = db.cursor()
-    cursor.execute(f"SELECT * FROM {USERS_TABLE} WHERE username=? AND token=?", (username, token))
-    user = cursor.fetchone()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or token invalid")
-    return user
+    is_valid = check_password_hash(hkey, key)
+    if is_valid :
+        return username
+    else :
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
