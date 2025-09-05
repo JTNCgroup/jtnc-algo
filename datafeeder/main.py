@@ -109,7 +109,7 @@ async def polygon_stocks_listener() :
     while True:
         try:
             async with websockets.connect(WS_URL_STOCKS, ping_interval=20, ping_timeout=10) as websocket:
-                print("Connected to Polygon WS")
+                print("Connected to Polygon WS for STOCKS")
                 
                 await websocket.send(json.dumps({"action": "auth", "params": API_KEY_STOCKS}))
                 await websocket.send(json.dumps({"action": "subscribe", "params": "A.*"}))
@@ -121,19 +121,18 @@ async def polygon_stocks_listener() :
                         await redis_client.publish(REDIS_CHANNEL_STOCKS, message)
         
         except websockets.ConnectionClosed as e:
-            print(f"WebSocket disconnected: {e}. Reconnecting in 5 seconds...")
+            print(f"Stocks WebSocket disconnected: {e}. Reconnecting in 5 seconds...")
             await asyncio.sleep(5)
         
         except Exception as e:
-            print(f"Unexpected error: {e}. Retrying in 5 seconds...")
+            print(f"Stocks Unexpected error: {e}. Retrying in 5 seconds...")
             await asyncio.sleep(5)
 
 async def polygon_options_listener() :
     while True:
         try:
             async with websockets.connect(WS_URL_OPTIONS, ping_interval=20, ping_timeout=10) as websocket:
-                print("Connected to Polygon WS")
-                print("API_KEY_OPTIONS : ", API_KEY_OPTIONS)
+                print("Connected to Polygon WS for OPTIONS")
                 await websocket.send(json.dumps({"action": "auth", "params": API_KEY_OPTIONS}))
                 await websocket.send(json.dumps({"action": "subscribe", "params": "A.*"}))
                 print(f"Sent payload")
@@ -144,11 +143,11 @@ async def polygon_options_listener() :
                         await redis_client.publish(REDIS_CHANNEL_OPTIONS, message)
         
         except websockets.ConnectionClosed as e:
-            print(f"WebSocket disconnected: {e}. Reconnecting in 5 seconds...")
+            print(f"Options WebSocket disconnected: {e}. Reconnecting in 5 seconds...")
             await asyncio.sleep(5)
         
         except Exception as e:
-            print(f"Unexpected error: {e}. Retrying in 5 seconds...")
+            print(f"Options Unexpected error: {e}. Retrying in 5 seconds...")
             await asyncio.sleep(5)
 
 async def redis_stock_listener() :
