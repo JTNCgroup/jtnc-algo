@@ -94,7 +94,7 @@ async def websocket_options(websocket: WebSocket) :
         await websocket.close(code=1008)
         return
     await websocket.accept()
-    
+
     connected_clients_options.add(websocket)
     print("Stock! Client connected!")
 
@@ -117,6 +117,7 @@ async def polygon_stocks_listener() :
                 
                 async for message in websocket:
                     if message:
+                        print(message)
                         await redis_client.publish(REDIS_CHANNEL_STOCKS, message)
         
         except websockets.ConnectionClosed as e:
