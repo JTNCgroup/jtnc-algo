@@ -195,5 +195,5 @@ async def redis_options_listener() :
 def startup_event() :
     asyncio.create_task(polygon_stocks_listener())
     asyncio.create_task(redis_stock_listener())
-    asyncio.create_task(polygon_options_listener())
-    asyncio.create_task(redis_options_listener())
+    #asyncio.create_task(polygon_options_listener())
+    #asyncio.create_task(redis_options_listener())
