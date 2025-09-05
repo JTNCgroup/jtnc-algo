@@ -13,17 +13,20 @@ from starlette.websockets import WebSocketState
 from common import auth
 
 #REST_URL = 'https://api.polygon.io/v3/reference/stocks/contracts'
-WS_URL   = 'wss://socket.polygon.io/stocks'
-#API_KEY  = "VI6KWvmzTp5sDsDUfwZbJapZHoWOSFbb"
-
-API_KEY  = os.getenv("POLYGON_API")
+WS_URL_STOCKS   = 'wss://socket.polygon.io/stocks'
+WS_URL_OPTIONS  = 'wss://socket.polygon.io/options'
+API_KEY_STOCKS  = os.getenv("POLYGON_API_STOCKS")
+API_KEY_OPTIONS = os.getenv("POLYGON_API_OPTIONS")
 
 app = FastAPI()
-connected_clients = set()
+connected_clients_stocks = set()
+connected_clients_options = set()
+
 
 REDIS_HOST    = "redis" #"localhost"
 REDIS_PORT    = 6379
-REDIS_CHANNEL = "stocks"
+REDIS_CHANNEL_STOCKS  = "stocks"
+REDIS_CHANNEL_OPTIONS = "options"
 redis_pool    = aioredis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 redis_client  = aioredis.Redis(connection_pool=redis_pool)
 
@@ -56,8 +59,8 @@ async def restapi_price(request: Request, user=Depends(auth.verify_token)) :
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-@app.websocket("/ws")
-async def websocket_price(websocket: WebSocket) :
+@app.websocket("/ws/stocks")
+async def websocket_stocks(websocket: WebSocket) :
     token = websocket.headers.get("Authorization")
     if token is None:
         await websocket.close(code=1008)
@@ -69,29 +72,52 @@ async def websocket_price(websocket: WebSocket) :
         return
     await websocket.accept()
 
-    connected_clients.add(websocket)
-    print("Client connected")
+    connected_clients_stocks.add(websocket)
+    print("Stock! Client connected!")
 
     try:
         while True:
             await asyncio.sleep(1)
     except WebSocketDisconnect:
-        connected_clients.remove(websocket)
+        connected_clients_stocks.remove(websocket)
         print("Client disconnected")
 
-async def polygon_listener() :
+@app.websocket("/ws/options")
+async def websocket_stocks(websocket: WebSocket) :
+    token = websocket.headers.get("Authorization")
+    if token is None:
+        await websocket.close(code=1008)
+        return
+    try:
+        user = auth.verify_token(token)
+    except:
+        await websocket.close(code=1008)
+        return
+    await websocket.accept()
+
+    connected_clients_options.add(websocket)
+    print("Stock! Client connected!")
+
+    try:
+        while True:
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        connected_clients_options.remove(websocket)
+        print("Client disconnected")
+
+async def polygon_stocks_listener() :
     while True:
         try:
-            async with websockets.connect(WS_URL, ping_interval=20, ping_timeout=10) as websocket:
+            async with websockets.connect(WS_URL_STOCKS, ping_interval=20, ping_timeout=10) as websocket:
                 print("Connected to Polygon WS")
                 
-                await websocket.send(json.dumps({"action": "auth", "params": API_KEY}))
+                await websocket.send(json.dumps({"action": "auth", "params": API_KEY_STOCKS}))
                 await websocket.send(json.dumps({"action": "subscribe", "params": "A.*"}))
                 print(f"Sent payload\n\n")
                 
                 async for message in websocket:
                     if message:
-                        await redis_client.publish(REDIS_CHANNEL, message)
+                        await redis_client.publish(REDIS_CHANNEL_STOCKS, message)
         
         except websockets.ConnectionClosed as e:
             print(f"WebSocket disconnected: {e}. Reconnecting in 5 seconds...")
@@ -101,15 +127,37 @@ async def polygon_listener() :
             print(f"Unexpected error: {e}. Retrying in 5 seconds...")
             await asyncio.sleep(5)
 
-async def redis_listener() :
+async def polygon_options_listener() :
+    while True:
+        try:
+            async with websockets.connect(WS_URL_OPTIONS, ping_interval=20, ping_timeout=10) as websocket:
+                print("Connected to Polygon WS")
+                
+                await websocket.send(json.dumps({"action": "auth", "params": API_KEY_OPTIONS}))
+                await websocket.send(json.dumps({"action": "subscribe", "params": "A.*"}))
+                print(f"Sent payload\n\n")
+                
+                async for message in websocket:
+                    if message:
+                        await redis_client.publish(REDIS_CHANNEL_OPTIONS, message)
+        
+        except websockets.ConnectionClosed as e:
+            print(f"WebSocket disconnected: {e}. Reconnecting in 5 seconds...")
+            await asyncio.sleep(5)
+        
+        except Exception as e:
+            print(f"Unexpected error: {e}. Retrying in 5 seconds...")
+            await asyncio.sleep(5)
+
+async def redis_stock_listener() :
     pubsub = redis_client.pubsub()
-    await pubsub.subscribe(REDIS_CHANNEL)
+    await pubsub.subscribe(REDIS_CHANNEL_STOCKS)
     
-    async for message in pubsub.listen():
-        if message["type"] == "message":
+    async for message in pubsub.listen() :
+        if message["type"] == "message" :
             data = message["data"]
             disconnected = []
-            for ws in connected_clients:
+            for ws in connected_clients_stocks:
                 if ws.application_state == WebSocketState.CONNECTED:
                     try :
                         await ws.send_text(data)
@@ -120,9 +168,32 @@ async def redis_listener() :
                     disconnected.append(ws)
             
             for ws in disconnected:
-                connected_clients.remove(ws)
+                connected_clients_stocks.remove(ws)
+
+async def redis_options_listener() :
+    pubsub = redis_client.pubsub()
+    await pubsub.subscribe(REDIS_CHANNEL_OPTIONS)
+    
+    async for message in pubsub.listen() :
+        if message["type"] == "message" :
+            data = message["data"]
+            disconnected = []
+            for ws in connected_clients_options:
+                if ws.application_state == WebSocketState.CONNECTED:
+                    try :
+                        await ws.send_text(data)
+                    except Exception as e:
+                        print(f"⚠️ Error sending to client, removing: {e}")
+                        disconnected.append(ws)
+                else :
+                    disconnected.append(ws)
+            
+            for ws in disconnected:
+                connected_clients_options.remove(ws)
 
 @app.on_event("startup")
 def startup_event() :
-    asyncio.create_task(polygon_listener())
-    asyncio.create_task(redis_listener())
+    asyncio.create_task(polygon_stocks_listener())
+    asyncio.create_task(redis_stock_listener())
+    asyncio.create_task(polygon_options_listener())
+    asyncio.create_task(redis_options_listener())

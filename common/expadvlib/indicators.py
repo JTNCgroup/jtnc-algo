@@ -321,6 +321,288 @@ class ATR(BaseIndicator) :
             self._tr[i] = max([high[i]-low[i], abs(low[i]-close[i-1]), abs(high[i]-close[i-1])])
             self._values[i] = (self._tr[i] + (self._period-1)*self._values[i-1])/self._period
 
+class KernelRegression(BaseIndicator) :
+    def __init__(self, h=8.0, r=8.0, n=25) :
+        '''
+        h = band-width (kernel size)
+        r = smoothness
+        n = size of kernel array
+        '''
+        
+        super().__init__()
+        self._period = n
+        self._weight = self._gen_weight(h, r, n)
+        
+    def OnCalculate(self, price) :
+        if len(self) <= 0 :
+            self._values = np.full(len(price), np.nan)
+            start = self._period-1
+            
+        else :
+            if len(self) > len(price) :
+                return
+            start = len(self)
+            if len(self) < len(price) :
+                self._values = np.hstack([self._values, np.full(len(price)-len(self._values), np.nan)])
+            if (start < self._period-1) :
+                start = self._period-1
+        
+        for i in range(start, len(price)) :
+            self._values[i] = np.sum(self._weight*price[i-self._period+1:i+1])
+
+    def _gen_weight(self, h, r, n) :
+        w = np.array([(1.0 + (i**2 / ((h**2)*2*r)))**(-r) for i in reversed(range(n))])
+        w /= np.sum(w)
+        return w
+class JTNCZscoreVWAP(BaseIndicator) :
+    def __init__(self, period=180) :
+        super().__init__()
+        self._period=period
+
+    def OnCalculate(self, price, volume) :
+        if len(self) <= 0 :
+            self._pv     = price*volume
+            self._devs   = np.full(len(price), np.nan)
+            self._values = np.full(len(price), np.nan)
+            start = self._period-1
+            
+        else :
+            if len(self) > len(price) :
+                return
+                
+            start = len(self)
+            if (start < self._period-1) :
+                start = self._period-1
+                self._pv = price*volume
+            
+            if len(self) < len(price) :
+                self._pv     = np.hstack([self._pv, np.full(len(price)-len(self._pv), np.nan)])
+                self._devs   = np.hstack([self._devs, np.full(len(price)-len(self._devs), np.nan)])
+                self._values = np.hstack([self._values, np.full(len(price)-len(self._values), np.nan)])
+        
+        for i in range(start, len(price)) :
+            j = slice(i-self._period+1, i+1)
+            self._pv[i] = price[i]*volume[i]
+            mean = np.sum(self._pv[j])/np.sum(volume[j])
+            self._devs[i] = price[i] - mean
+            vwapsd = np.sqrt(np.mean(np.power(self._devs[j], 2)))
+            
+            if i>=2*self._period-2 :
+                self._values[i] = self._devs[i]/vwapsd if vwapsd!= 0 else 0
+
+class JTNCZscoreVWAPRangeV2(BaseIndicator) :
+    '''
+    OnCalculate(high, low, close, volume)
+    Output
+    0 : High
+    1 : Low
+    2 : Mid
+    3 : QHi
+    4 : QLo
+    5 : Range
+    6 : PRLOC
+    '''
+    
+    def __init__(self, period=180, cross_ab=2.0, cross_be=-2.0) :
+        super().__init__()
+        self._cross_ab = cross_ab
+        self._cross_be = cross_be
+        self._period = period
+
+        self._zv = JTNCZscoreVWAP(self._period)
+
+    def Reset(self) :
+        self._zHi     = np.full(len(close), np.nan)
+        self._zLo     = np.full(len(close), np.nan)
+        self._zBar    = np.full(len(close), np.nan)
+        self._c_above = np.full(len(close), False)
+        self._c_below = np.full(len(close), False)
+        self._fractalHi = np.zeros(len(close))
+        self._fractalLo = np.zeros(len(close))
+        self._price_low = np.zeros(len(close))
+        self._price_high = np.zeros(len(close))
+        
+        self._values = np.full((7, len(close)), np.nan)
+        
+    def OnCalculate(self, high, low, close, volume) :
+        self._zv.OnCalculate(close, volume)
+        
+        start = len(self)
+        if len(self)<=0:
+            self.Reset()
+            self._values = np.full((7, len(close)), np.nan)
+            start = 1
+
+        if len(self) < len(close) :
+            self._zHi    = np.hstack([self._zHi, np.full(len(close)-len(self._zHi), np.nan)])
+            self._zLo    = np.hstack([self._zLo, np.full(len(close)-len(self._zLo), np.nan)])
+            self._zBar   = np.hstack([self._zBar, np.full(len(close)-len(self._zBar), np.nan)])
+            self._c_above = np.hstack([self._c_above, np.full(len(close)-len(self._c_above), False)])
+            self._c_below = np.hstack([self._c_below, np.full(len(close)-len(self._c_below), False)])
+
+            self._fractalHi  = np.hstack([self._fractalHi, np.full(len(close)-len(self._fractalHi), np.nan)])
+            self._fractalLo  = np.hstack([self._fractalLo, np.full(len(close)-len(self._fractalLo), np.nan)])
+            self._price_low  = np.hstack([self._price_low, np.full(len(close)-len(self._price_low), np.nan)])
+            self._price_high = np.hstack([self._price_High, np.full(len(close)-len(self._price_high), np.nan)])
+            
+            self._values = np.hstack([self._values, np.full((7, len(close)-len(self)), np.nan)])
+
+        
+        for i in range(start, len(close)) :
+            if (self._zv[i-1] is None) or (self._zv[i] is None) or np.isnan(self._zv[i-1]) or np.isnan(self._zv[i]) :
+                continue
+
+            self._zHi[i]  = self._zHi[i-1]
+            self._zLo[i]  = self._zLo[i-1]
+            self._zBar[i] = self._zBar[i-1]
+            self._c_above[i] = self._c_above[i-1]
+            self._c_below[i] = self._c_below[i-1]
+            self._fractalHi[i] = self._fractalHi[i-1]
+            self._fractalLo[i] = self._fractalLo[i-1]
+            self._price_low[i] = self._price_low[i-1]
+            self._price_high[i] = self._price_high[i-1]
+            
+            if ((self._zv[i-1] <= self._cross_ab) and (self._zv[i] > self._cross_ab)) or (self._c_above[i] and self._zv[i] > self._zHi[i]) :
+                self._zHi[i] = self._zv[i]
+            if ((self._zv[i-1] >= self._cross_be) and (self._zv[i] < self._cross_be)) or (self._c_below[i] and self._zv[i] < self._zLo[i]) :
+                self._zLo[i] = self._zv[i]
+            
+            if (self._zv[i-1] <= self._cross_ab) and (self._zv[i] > self._cross_ab) :
+                self._c_above[i] = True
+            elif (self._zv[i] <= self._cross_ab) and not (self._c_above[i] and self._zv[i-2]<=self._cross_ab and self._zv[i-1]>self._cross_ab) :
+                self._c_above[i] = False
+            
+            if (self._zv[i-1] >= self._cross_be) and (self._zv[i] < self._cross_be) :
+                self._c_below[i] = True
+            elif (self._zv[i] >= self._cross_be) and not (self._c_below[i] and self._zv[i-2]>=self._cross_be and self._zv[i-1]<self._cross_be) :
+                self._c_below[i] = False
+            
+            if (self._zHi[i]!=0) and (self._zv[i-1]==self._zHi[i]) and (self._zv[i]<self._zHi[i]) and (high[i]>self._price_low[i]) :
+                self._zHi[i] = self._zv[i-1]
+                self._fractalHi[i] = high[i-1]
+                self._zBar[i] = i
+            
+            if (self._zLo[i]!=0) and (self._zv[i-1]==self._zLo[i]) and (self._zv[i]>self._zLo[i]) and (low[i]<self._price_high[i]) :
+                self._zLo[i] = self._zv[i-1]
+                self._fractalLo[i] = low[i-1]
+                self._zBar[i] = i
+
+            self._price_high[i] = self._fractalHi[i] if self._fractalHi[i]!=0 else self._price_high[i]
+            self._price_low[i]  = self._fractalLo[i] if self._fractalLo[i]!=0 else self._price_low[i]
+        
+            if (self._price_high[i]!=0) and (self._price_low[i]!=0) :
+                self._values[0, i] = self._price_high[i]
+                self._values[1, i] = self._price_low[i]
+                self._values[2, i] = (self._price_high[i] + self._price_low[i])/2
+                self._values[5, i] = self._price_high[i] - self._price_low[i]
+                self._values[3, i] = self._price_high[i] - 0.25*self._values[5, i]
+                self._values[4, i] = self._price_low[i]  + 0.25*self._values[5, i]
+
+                hlc3 = (high[i] + low[i] + close[i])/3
+                self._values[6, i] = 1 if (hlc3 > self._values[3][i]) else (-1 if hlc3 < self._values[4][i] else 0)
+
+class JTNCMarketStateIndicator(BaseIndicator) :
+    '''
+    Output
+    0 : High
+    1 : QHi
+    2 : QLo
+    3 : Low
+    4 : State
+    5 : Uptrend Pullback
+    6 : Downtrend Pullback
+    7 : Uptrend Deterioration
+    8 : Downtrend Deterioration
+    '''
+    def __init__(self, zv_periods=(10, 30, 60, 180)) :
+        super().__init__()
+        
+        self._periods = tuple(sorted(zv_periods))
+        self._zv = [JTNCZscoreVWAPRangeV2(period=i) for i in zv_periods]
+        self._pr = [KernelRegression(h=20.0, r=8.0, n=25) for _ in range(len(zv_periods))]
+        self._n  = len(zv_periods)
+        
+    def OnCalculate(self, open_, high, low, close, volume) :
+        for i in range(len(self._zv)) :
+            self._zv[i].OnCalculate(high, low, close, volume)
+            self._pr[i].OnCalculate(self._zv[i][6, :])
+        
+        start = len(self)
+        if len(self)<=0 :
+            self._zvr    = [np.full(len(close), np.nan) for _ in range(self._n-1)]
+            self._zvr3   = {x:np.full(len(close), np.nan) for x in ('Mid', 'QLo', 'QHi', 'PRLoc')}
+            self._last_trend_dir = np.full(len(close), np.nan)
+            self._values = np.full((9, len(close)), np.nan)
+            start = 1
+
+        if len(self) < len(close) :
+            self._last_trend_dir = np.hstack([self._last_trend_dir, np.full((5, len(close)-len(self)), np.nan)])
+            self._values = np.hstack([self._values, np.full((9, len(close)-len(self)), np.nan)])
+            for i in range(len(self._zv)) :
+                self._zvr[i] = np.hstack([self._zvr[i], np.full(len(close), np.nan)])
+            for x in ('Mid', 'QLo', 'QHi', 'PRLoc') :
+                self._zvr3[x] = np.hstack([self._zvr3[x], np.full(len(close), np.nan)])
+            
+        for i in range(start, len(close)) :
+            
+            nz_range  = [x[5][i] != 0 for x in self._zv]
+            zv3_range = self._zv[3][5][i] if ((self._zv[self._n-1][0][i]!=0) and \
+                                              (self._zv[self._n-1][1][i]!=0) and \
+                                              (~np.isnan(self._zv[self._n-1][0][i])) and \
+                                              (~np.isnan(self._zv[self._n-1][1][i]))) else 0
+            nz_range[3] = int(zv3_range!=0)
+
+            for j in range(self._n-1) :
+                self._zvr[j][i]    = self._zv[j][2, i]*nz_range[j]
+            
+            self._zvr3['Mid'][i]   = self._zv[self._n-1][2, i]*nz_range[j]
+            self._zvr3['QHi'][i]   = self._zv[self._n-1][3, i]*nz_range[j]
+            self._zvr3['QLo'][i]   = self._zv[self._n-1][4, i]*nz_range[j]
+            self._zvr3['PRLoc'][i] = self._zv[self._n-1][6, i]*nz_range[j]
+
+            avg_mid  = np.mean([self._zvr[j][i] for j in range(self._n-1)], axis=0)
+            hlc3     = (high[i] + low[i] + close[i])/3
+            
+            bias = 2*(hlc3 > avg_mid).astype(int) - 1
+
+            self._last_trend_dir[i] = self._last_trend_dir[i-1]
+            
+            uptrend_base   = self._pr[self._n-1][i] > 0.5
+            downtrend_base = self._pr[self._n-1][i] < -0.5
+            
+            zv3_prloc = self._zv[self._n-1][6, i]
+            # if (zv3_prloc is None) or np.isnan(zv3_prloc) :
+            #     continue
+            
+            if (zv3_prloc > 0) :
+                self._values[0, i] = self._zv[self._n-1][0, i] #self._zvr3['High'][i]
+            if (zv3_prloc >= 0) :
+                self._values[1, i] = self._zvr3['QHi'][i]
+            if (zv3_prloc <= 0) :
+                self._values[2, i] = self._zvr3['QLo'][i]
+            if (zv3_prloc < 0) :
+                self._values[3, i] = self._zv[self._n-1][1, i] # self._zvr3['Low'][i]
+
+            
+            if np.isfinite(self._values[0, i]) and np.isfinite(self._values[1, i]) :
+                self._values[4, i] = 1
+            elif np.isfinite(self._values[1, i]) and np.isfinite(self._values[2, i]) :
+                self._values[4, i] = 0
+            elif np.isfinite(self._values[2, i]) and np.isfinite(self._values[3, i]) :
+                self._values[4, i] = -1
+            
+            if (self._pr[3][i-1] <= 0.5 and self._pr[3][i]>0.5) :
+                self._last_trend_dir[i] = 1
+            elif (self._pr[3][i-1] >= -0.5 and self._pr[3][i]<-0.5) :
+                self._last_trend_dir[i] = -1
+            else :
+                self._last_trend_dir[i] = self._last_trend_dir[i-1]
+            
+            self._values[5, i] = ((uptrend_base   or ((self._last_trend_dir[i]== 1) and not downtrend_base)) & (self._pr[2][i] <  1)) & (hlc3 > self._zvr3['QHi'][i])
+            self._values[6, i] = ((downtrend_base or ((self._last_trend_dir[i]==-1) and not uptrend_base))   & (self._pr[2][i] > -1)) & (hlc3 < self._zvr3['QLo'][i])
+            self._values[7, i] = uptrend_base   & (self._pr[0][i]< 1) & (self._pr[1][i]< 1) & (self._pr[2][i]< 1)
+            self._values[8, i] = downtrend_base & (self._pr[0][i]>-1) & (self._pr[1][i]>-1) & (self._pr[3][i]>-1)
+
 class ChandelierExit(BaseIndicator) :
     '''
     onCalculate(high, low, close)

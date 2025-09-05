@@ -10,14 +10,15 @@ from enum import Enum
 import asyncio
 import websockets
 
-#import nest_asyncio
-#nest_asyncio.apply()
+from common.expadvlib import bars
+from common.expadvlib.const import TIMEFRAME, DATAFEEDER, TIMEZONE_NY
+from common.expadvlib.indicators import *
 
-import sys
-sys.path.append('expadvlib')
-import bars
-from const import TIMEFRAME, DATAFEEDER, TIMEZONE_NY
-from indicators import *
+#import sys
+#sys.path.append('expadvlib')
+#import bars
+#from const import TIMEFRAME, DATAFEEDER, TIMEZONE_NY
+#from indicators import *
 
 WS_URL = "ws://34.61.153.252:8111/ws"
 REDIS_HOST    = "redis" #"localhost"
@@ -123,7 +124,8 @@ class TestEA(BaseEA) :
         self.period_chandelier_multiple = period_chandelier_multiple
         
         self.levels = []
-        
+        self.counters = {'total':0, 'winning':0, 'losing':0}
+
         self.__is_updated = False
         self.order = None
         

@@ -1,10 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from typing import List, Dict, Any, Literal
 import rel
 import asyncio
 import nest_asyncio
 
+from common import auth
 from EA_01 import *
 
 nest_asyncio.apply()
@@ -24,11 +25,11 @@ class LevelID(BaseModel) :
    id : int
 
 @app.get("/")
-async def root() :
+async def root(user: str = Depends(auth.verify_token)) :
    return {"message" : "Hello Algo!"}
 
 @app.post("/qfaa_levels")
-async def new_levels(levels: List[Levels]) :
+async def new_levels(levels: List[Levels], user: str = Depends(auth.verify_token)) :
    x = [{'id'    : level.id,
          'time'  : level.time,
          'symbol': level.symbol,
@@ -44,11 +45,11 @@ async def new_levels(levels: List[Levels]) :
            'levels' : EA.get_level()}
 
 @app.get("/qfaa_levels")
-async def new_levels() :
+async def new_levels(user: str = Depends(auth.verify_token)) :
    return EA.get_level()
 
 @app.delete("/qfaa_levels")
-async def delete_level(level_id : LevelID) :
+async def delete_level(level_id : LevelID, user: str = Depends(auth.verify_token)) :
    if level_id == -1 :
       EA.clear_level()
       return {'message' : 'all levels are removed.'}
