@@ -133,7 +133,8 @@ async def polygon_options_listener() :
         try:
             async with websockets.connect(WS_URL_OPTIONS, ping_interval=20, ping_timeout=10) as websocket:
                 print("Connected to Polygon WS")
-                
+
+                print("API_KEY_OPTIONS : ", API_KEY_OPTIONS)
                 await websocket.send(json.dumps({"action": "auth", "params": API_KEY_OPTIONS}))
                 await websocket.send(json.dumps({"action": "subscribe", "params": "A.*"}))
                 print(f"Sent payload\n\n")
