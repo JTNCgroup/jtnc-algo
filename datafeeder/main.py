@@ -83,7 +83,7 @@ async def websocket_stocks(websocket: WebSocket) :
         print("Client disconnected")
 
 @app.websocket("/ws/options")
-async def websocket_stocks(websocket: WebSocket) :
+async def websocket_options(websocket: WebSocket) :
     token = websocket.headers.get("Authorization")
     if token is None:
         await websocket.close(code=1008)
@@ -94,7 +94,7 @@ async def websocket_stocks(websocket: WebSocket) :
         await websocket.close(code=1008)
         return
     await websocket.accept()
-
+    
     connected_clients_options.add(websocket)
     print("Stock! Client connected!")
 
