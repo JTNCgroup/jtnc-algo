@@ -117,7 +117,7 @@ async def polygon_stocks_listener() :
                 
                 async for message in websocket:
                     if message:
-                        print('STOCKS', message, sep='\t')
+                        #print('STOCKS', message, sep='\t')
                         await redis_client.publish(REDIS_CHANNEL_STOCKS, message)
         
         except websockets.ConnectionClosed as e:
@@ -133,7 +133,6 @@ async def polygon_options_listener() :
         try:
             async with websockets.connect(WS_URL_OPTIONS, ping_interval=20, ping_timeout=10) as websocket:
                 print("Connected to Polygon WS")
-
                 print("API_KEY_OPTIONS : ", API_KEY_OPTIONS)
                 await websocket.send(json.dumps({"action": "auth", "params": API_KEY_OPTIONS}))
                 await websocket.send(json.dumps({"action": "subscribe", "params": "A.*"}))
@@ -141,7 +140,7 @@ async def polygon_options_listener() :
                 
                 async for message in websocket:
                     if message:
-                        print('OPTIONS', message, sep='\t')
+                        #print('OPTIONS', message, sep='\t')
                         await redis_client.publish(REDIS_CHANNEL_OPTIONS, message)
         
         except websockets.ConnectionClosed as e:
@@ -196,8 +195,7 @@ async def redis_options_listener() :
 
 @app.on_event("startup")
 def startup_event() :
-    #asyncio.create_task(polygon_stocks_listener())
-    #asyncio.create_task(redis_stock_listener())
-    #print(API_KEY_OPTIONS)
+    asyncio.create_task(polygon_stocks_listener())
+    asyncio.create_task(redis_stock_listener())
     asyncio.create_task(polygon_options_listener())
     asyncio.create_task(redis_options_listener())
