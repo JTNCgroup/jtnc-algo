@@ -113,7 +113,7 @@ async def polygon_stocks_listener() :
                 
                 await websocket.send(json.dumps({"action": "auth", "params": API_KEY_STOCKS}))
                 await websocket.send(json.dumps({"action": "subscribe", "params": "A.*"}))
-                print(f"Sent payload\n\n")
+                print(f"Sent payload")
                 
                 async for message in websocket:
                     if message:
@@ -137,7 +137,7 @@ async def polygon_options_listener() :
                 print("API_KEY_OPTIONS : ", API_KEY_OPTIONS)
                 await websocket.send(json.dumps({"action": "auth", "params": API_KEY_OPTIONS}))
                 await websocket.send(json.dumps({"action": "subscribe", "params": "A.*"}))
-                print(f"Sent payload\n\n")
+                print(f"Sent payload")
                 
                 async for message in websocket:
                     if message:
