@@ -100,7 +100,10 @@ async def websocket_options(websocket: WebSocket) :
         token = token.split(" ", 1)[1]
         print(token)
         token = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
-        user = auth.verify_token(token)
+        
+        db_gen = auth.get_db()
+        db = next(db_gen)
+        user = auth.verify_token(token, db=db)
     except Exception as e:
         print(f"Exception, {repr(e)}")
         await websocket.close(code=1008)
