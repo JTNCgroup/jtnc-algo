@@ -85,12 +85,18 @@ async def websocket_stocks(websocket: WebSocket) :
 @app.websocket("/ws/options")
 async def websocket_options(websocket: WebSocket) :
     token = websocket.headers.get("Authorization")
+
+    print("headers:", websocket.headers)
+    print(f"token : {token}")
+    
     if token is None:
+        print('None Token')
         await websocket.close(code=1008)
         return
     try:
         user = auth.verify_token(token)
-    except:
+    except Exception as e:
+        print(f"Exception, {repr(e)}")
         await websocket.close(code=1008)
         return
     await websocket.accept()
