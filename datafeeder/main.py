@@ -67,7 +67,15 @@ async def websocket_stocks(websocket: WebSocket) :
         await websocket.close(code=1008)
         return
     try:
-        user = auth.verify_token(token)
+        if not token.lower().startswith("bearer") :
+            await websocket.close(code=1008)
+            return
+        token = token.split(" ", 1)[1]
+        token = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+
+        db_gen = auth.get_db()
+        db = next(db_gen)
+        user = auth.verify_token(token, db=db)
     except:
         await websocket.close(code=1008)
         return
@@ -86,11 +94,7 @@ async def websocket_stocks(websocket: WebSocket) :
 @app.websocket("/ws/options")
 async def websocket_options(websocket: WebSocket) :
     token = websocket.headers.get("Authorization")
-    print("headers:", websocket.headers)
-    print(f"token : {token}")
-    
     if token is None:
-        print('None Token')
         await websocket.close(code=1008)
         return
     try:
@@ -98,7 +102,6 @@ async def websocket_options(websocket: WebSocket) :
             await websocket.close(code=1008)
             return
         token = token.split(" ", 1)[1]
-        print(token)
         token = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         
         db_gen = auth.get_db()
