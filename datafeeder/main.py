@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Depends
+from fastapi.security import HTTPAuthorizationCredentials
 import rel
 import json
 import asyncio
@@ -85,7 +86,6 @@ async def websocket_stocks(websocket: WebSocket) :
 @app.websocket("/ws/options")
 async def websocket_options(websocket: WebSocket) :
     token = websocket.headers.get("Authorization")
-
     print("headers:", websocket.headers)
     print(f"token : {token}")
     
@@ -94,6 +94,7 @@ async def websocket_options(websocket: WebSocket) :
         await websocket.close(code=1008)
         return
     try:
+        token = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         user = auth.verify_token(token)
     except Exception as e:
         print(f"Exception, {repr(e)}")
