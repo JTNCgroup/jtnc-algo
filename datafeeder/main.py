@@ -94,6 +94,11 @@ async def websocket_options(websocket: WebSocket) :
         await websocket.close(code=1008)
         return
     try:
+        if not token.lower().startswith("bearer") :
+            await websocket.close(code=1008)
+            return
+        token = token.split(" ", 1)[1]
+        print(token)
         token = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         user = auth.verify_token(token)
     except Exception as e:
