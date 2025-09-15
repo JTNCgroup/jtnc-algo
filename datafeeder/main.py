@@ -127,21 +127,21 @@ async def tradingview_alert(request:Request) :
         case 'buy' :
             payload = {"symbol": ticker.upper(),
                        "single_leg": {
-                           "order": {"option_symbol": option_symbols['call'] + buy_offset,
+                           "order": {"option_symbol": option_symbols['call']['symbol'],
                                      "type": "limit",
                                      "side": "buy_to_open",
                                      "quantity": 1,
-                                     "price": option_symbols['call']+buy_offset,
+                                     "price": option_symbols['call']['price'] + buy_offset,
                                      "tif": "day"},
                                      "class": "options",}}
         case 'sell' :
             payload = {"symbol": ticker.upper(),
                        "single_leg": {
-                           "order": {"option_symbol": option_symbols['put']+sell_offset,
+                           "order": {"option_symbol": option_symbols['put']['symbol'],
                                      "type": "limit",
                                      "side": "buy_to_open",
                                      "quantity": 1,
-                                     "price": option_symbols['put']+buy_offset,
+                                     "price": option_symbols['put']['price'] + sell_offset,
                                      "tif": "day"},
                                      "class": "options",}}
     
