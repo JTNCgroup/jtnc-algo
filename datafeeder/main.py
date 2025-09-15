@@ -63,8 +63,8 @@ def get_itm_symbol(ticker, price, spread_offset = 5) :
     
     s = s['results']
 
-    call_symbols = [(x['details']['strike_price'], x['details']['ticker']) for x in s if x['details']['contract_type'] == 'call']
-    put_symbols = [(x['details']['strike_price'], x['details']['ticker']) for x in s if x['details']['contract_type'] == 'put']
+    call_symbols = [(x['details']['strike_price'], x['details']['ticker'], x['last_quote']['midpoint']) for x in s if x['details']['contract_type'] == 'call']
+    put_symbols = [(x['details']['strike_price'], x['details']['ticker'], x['last_quote']['midpoint']) for x in s if x['details']['contract_type'] == 'put']
 
     nearest_call = sorted([(price - x[0], x[1], x[2]) for x in call_symbols if price-x[0]>0])[0][1:]
     nearest_put  = sorted([(x[0] - price, x[1], x[2]) for x in put_symbols if x[0]-price>0])[0][1:]
