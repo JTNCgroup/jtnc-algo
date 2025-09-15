@@ -108,7 +108,7 @@ async def restapi_price(request: Request, user=Depends(auth.verify_token)) :
 
 @app.post("/tradingview")
 async def tradingview_alert(request:Request) :
-    data   = request.json()
+    data   = await request.json()
     ticker = data['ticker']
     price  = data['price']
     side   = data['side']
