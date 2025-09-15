@@ -609,12 +609,13 @@ class ChandelierExit(BaseIndicator) :
     chandelier[0] = Long Exit
     chandelier[1] = Short Exit
     '''
-    def __init__(self, range_period : int = 22, atr_period : int = 22, multiple : float = 3.0) :
+    def __init__(self, range_period:int = 22, atr_period:int = 22, multiple:float = 3.0, use_close:bool = False) :
         super().__init__()
         self._range_period = range_period
         self._atr_period   = atr_period
         self._multiple     = multiple
-        self._max_period = max(range_period, atr_period)
+        self._max_period   = max(range_period, atr_period)
+        self._use_close    = use_close
         
     def OnCalculate(self, high, low, close) :
         if len(self) <= 0 :
@@ -648,14 +649,18 @@ class ChandelierExit(BaseIndicator) :
             self._atr[i] = (self._tr[i] + (self._atr_period-1)*self._atr[i-1])/self._atr_period
 
             # Price Channel
-            self._upperband[i] = np.max(high[i-self._range_period+1:i+1])
-            self._lowerband[i] = np.min(low[i-self._range_period+1:i+1])
+            if self._use_close :
+                self._upperband[i] = np.max(close[i-self._range_period+1:i+1])
+                self._lowerband[i] = np.min(close[i-self._range_period+1:i+1])
+            else :
+                self._upperband[i] = np.max(high[i-self._range_period+1:i+1])
+                self._lowerband[i] = np.min(low[i-self._range_period+1:i+1])
 
             # Chandelier Exit
             self._values[0, i] = self._upperband[i] - self._multiple*self._atr[i]
             self._values[1, i] = self._lowerband[i] + self._multiple*self._atr[i]
 
-            if close[i-1] > self._values[0, i] :
+            if close[i-1] > self._values[0, i-1] :
                 self._values[0, i] = max(self._values[0, i], self._values[0, i-1])
-            if close[i-1] < self._values[1, i] :
+            if close[i-1] < self._values[1, i-1] :
                 self._values[1, i] = min(self._values[1, i], self._values[1, i-1])

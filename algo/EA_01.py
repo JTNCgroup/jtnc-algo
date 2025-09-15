@@ -137,7 +137,7 @@ class TestEA(BaseEA) :
         self.atr   = ATR(self.period_atr)
         
         self.donchian   = PriceChannel(self.period_donchian)
-        self.chandelier = ChandelierExit(self.period_chandelier_range, self.period_chandelier_atr, self.period_chandelier_multiple)
+        self.chandelier = ChandelierExit(self.period_chandelier_range, self.period_chandelier_atr, self.period_chandelier_multiple, use_close=True)
         
         # Initialize Indicators
         b = self.DownloadData()
