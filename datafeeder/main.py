@@ -124,7 +124,7 @@ async def tradingview_alert(request:Request) :
     url = "https://us-central1-quantum-flo-auto-algo-d3c2b.cloudfunctions.net/new_order"
     buy_offset = 0.05
     sell_offset = 0.03
-
+    
     match side :
         case 'buy' :
             payload = {"symbol": ticker.upper(),
