@@ -65,12 +65,12 @@ def get_itm_symbol(ticker, price, spread_offset = 5) :
 
     call_symbols = [(x['details']['strike_price'], x['details']['ticker'], x['last_quote']['midpoint']) for x in s if x['details']['contract_type'] == 'call']
     put_symbols = [(x['details']['strike_price'], x['details']['ticker'], x['last_quote']['midpoint']) for x in s if x['details']['contract_type'] == 'put']
-
+    
     nearest_call = sorted([(price - x[0], x[1], x[2]) for x in call_symbols if price-x[0]>0])[0][1:]
     nearest_put  = sorted([(x[0] - price, x[1], x[2]) for x in put_symbols if x[0]-price>0])[0][1:]
 
-    spread_second_leg_call = sorted([(price - x[0] + spread_offset, x[1], x[2]) for x in call_symbols if price-x[0]+spread_offset>0])[0][1:]
-    spread_second_leg_put  = sorted([(price - x[0] + spread_offset, x[1], x[2]) for x in put_symbols if price-x[0]+spread_offset>0])[0][1:]
+    spread_second_leg_call = sorted([(price - x[0] + spread_offset, x[1], x[2]) for x in call_symbols if (price - x[0] + spread_offset)>0])[0][1:]
+    spread_second_leg_put  = sorted([(price - x[0] - spread_offset, x[1], x[2]) for x in put_symbols if (price - x[0] - spread_offset)>0])[0][1:]
 
     return {'status' : 'ok',
             'call' : {'symbol' : nearest_call[0][2:], 'price': nearest_call[1]},
@@ -124,7 +124,7 @@ async def tradingview_alert(request:Request) :
     url = "https://us-central1-quantum-flo-auto-algo-d3c2b.cloudfunctions.net/new_order"
     buy_offset = 0.05
     sell_offset = 0.03
-    
+
     match side :
         case 'buy' :
             payload = {"symbol": ticker.upper(),
