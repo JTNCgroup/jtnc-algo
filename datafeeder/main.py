@@ -69,12 +69,14 @@ def get_itm_symbol(ticker, price, spread_offset = 5) :
     nearest_call = sorted([(price - x[0], x[1], x[2]) for x in call_symbols if price-x[0]>0])[0][1:]
     nearest_put  = sorted([(x[0] - price, x[1], x[2]) for x in put_symbols if x[0]-price>0])[0][1:]
 
-    spread_second_leg = sorted([(price - x[0] + spread_offset, x[1], x[2]) for x in call_symbols if price-x[0]+spread_offset>0])[0][1:]
+    spread_second_leg_call = sorted([(price - x[0] + spread_offset, x[1], x[2]) for x in call_symbols if price-x[0]+spread_offset>0])[0][1:]
+    spread_second_leg_put  = sorted([(price - x[0] + spread_offset, x[1], x[2]) for x in put_symbols if price-x[0]+spread_offset>0])[0][1:]
 
     return {'status' : 'ok',
             'call' : {'symbol' : nearest_call[0][2:], 'price': nearest_call[1]},
             'put' : {'symbol' : nearest_put[0][2:], 'price': nearest_put[1]},
-            'spread_second_leg' : {'symbol' : spread_second_leg[0][2:], 'price': spread_second_leg[1]},
+            'spread_second_leg_call' : {'symbol' : spread_second_leg_call[0][2:], 'price': spread_second_leg_call[1]},
+            'spread_second_leg_put'  : {'symbol' : spread_second_leg_put[0][2:], 'price': spread_second_leg_put[1]},
             }
 
 @app.get("/")
@@ -133,7 +135,18 @@ async def tradingview_alert(request:Request) :
                                      "quantity": 1,
                                      "price": option_symbols['call']['price'] + buy_offset,
                                      "tif": "day"},
-                                     "class": "options",}}
+                                     "class": "options"},
+                        "spread" : {"legs" : [{"options_symbol" : option_symbols['call']['symbol'],
+                                               "side" : "buy_to_open",
+                                               "quantity": 1},
+                                              {"options_symbol" : option_symbols['spread_second_leg_call']['symbol'],
+                                               "side" : "sell_to_open",
+                                               "quantity": 1}],
+                        "class" : "multileg",
+                        "price" : option_symbols['call']['price'] - option_symbols['spread_second_leg_call']['price'],
+                        "type" : "limit",
+                        "tif" : "day"}
+                       }
         case 'sell' :
             payload = {"symbol": ticker.upper(),
                        "single_leg": {
@@ -143,7 +156,18 @@ async def tradingview_alert(request:Request) :
                                      "quantity": 1,
                                      "price": option_symbols['put']['price'] + sell_offset,
                                      "tif": "day"},
-                                     "class": "options",}}
+                                     "class": "options"},
+                       "spread" : {"legs" : [{"options_symbol" : option_symbols['put']['symbol'],
+                                               "side" : "sell_to_open",
+                                               "quantity": 1},
+                                              {"options_symbol" : option_symbols['spread_second_leg_put']['symbol'],
+                                               "side" : "buy_to_open",
+                                               "quantity": 1}],
+                                    "class" : "multileg",
+                                    "price" : option_symbols['spread_second_leg_put']['price'] - option_symbols['put']['price'],
+                                    "type"  : "limit",
+                                    "tif"   : "day"}
+                       }
     
     r = requests.post(url=url, json=payload)
 
