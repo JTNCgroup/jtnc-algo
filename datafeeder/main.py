@@ -112,12 +112,13 @@ async def tradingview_alert(request:Request) :
             #           "tif" : "day"}
         
         case 'sell' :
-            single_leg = {"option_symbol": option_symbols['put']['symbol'],
-                          "type": "limit",
-                          "side": "buy_to_open",
-                          "quantity": 1,
-                          "tif": "day"}
-            
+            single_leg = {"order": {"option_symbol": option_symbols['put']['symbol'],
+                                    "type": "limit",
+                                    "side": "sell_to_open",
+                                    "quantity": 1,
+                                    "tif": "day"},
+                          "class": "options"}
+                        
             mid_bidask = 'mid' if  (option_symbols['put']['ask'] - option_symbols['put']['bid']) else 'bid'
             if close >= open_ :
                 single_leg['order']['price'] = math.floor(100*(option_symbols['put'][mid_bidask] + breakout_offset))/100
