@@ -70,8 +70,8 @@ async def tradingview_alert(request:Request) :
     data   = await request.json()
     ticker = data['ticker']
     open_  = data['open']
-    high   = data['high']
-    low    = data['low']
+    #high   = data['high']
+    #low    = data['low']
     close  = data['close']
     price  = data['price']
     side   = data['side']
@@ -95,7 +95,7 @@ async def tradingview_alert(request:Request) :
                                     "tif": "day"},
                           "class": "options"}
             mid_bidask = 'mid' if  (option_symbols['call']['ask'] - option_symbols['call']['bid']) else 'ask'
-            if close >= open :
+            if close >= open_ :
                 single_leg['order']['price'] = math.floor(100*(option_symbols['call'][mid_bidask] + breakout_offset))/100
             else :
                 single_leg['order']['price'] = math.floor(100*(option_symbols['call'][mid_bidask] + reversal_offset))/100
@@ -119,7 +119,7 @@ async def tradingview_alert(request:Request) :
                           "tif": "day"}
             
             mid_bidask = 'mid' if  (option_symbols['put']['ask'] - option_symbols['put']['bid']) else 'bid'
-            if close >= open :
+            if close >= open_ :
                 single_leg['order']['price'] = math.floor(100*(option_symbols['put'][mid_bidask] + breakout_offset))/100
             else :
                 single_leg['order']['price'] = math.floor(100*(option_symbols['put'][mid_bidask] + reversal_offset))/100
