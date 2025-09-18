@@ -2,7 +2,7 @@ import os
 import math
 import datetime
 import requests
-from expadvlib.const import TIMEZONE_NY
+from common.expadvlib.const import TIMEZONE_NY
 
 API_KEY_STOCKS  = os.getenv("POLYGON_API_STOCKS")
 API_KEY_OPTIONS = os.getenv("POLYGON_API_OPTIONS")
